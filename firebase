@@ -1,0 +1,238 @@
+https://www.studocu.com/in/document/indian-institute-of-technology-goa/computer-science/mad-lab-manual/27437125
+
+https://filetransfer.io/data-package/QrYWd3PX#link
+
+******************************************************************** 	FIREBASE SIGNUP			************************************************************************
+
+public class MainActivity3 extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity3";
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference mRef;
+    private Button registerButton;
+    private TextView clickToLogin;
+    private EditText userName, email, password;
+
+    private long lastClickTime = 0;
+    private final long doubleClickDelay = 500;
+    private boolean isBackgroundColorChanged = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main3);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        ConstraintLayout constraintLayout = findViewById(R.id.main);
+        constraintLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastClickTime < doubleClickDelay) {
+                    if (!isBackgroundColorChanged) {
+                        v.setBackgroundColor(Color.YELLOW);
+                        isBackgroundColorChanged = true;
+                    } else {
+                        v.setBackgroundColor(Color.WHITE);
+                        isBackgroundColorChanged = false;
+                    }
+                }
+                lastClickTime = currentTime;
+            }
+        });
+
+        mAuth = FirebaseAuth.getInstance();
+        mRef = FirebaseDatabase.getInstance().getReference();
+
+        userName = findViewById(R.id.editTextUsername);
+        email = findViewById(R.id.editTextTextEmailAddress2);
+        password = findViewById(R.id.editTextTextPassword2);
+        registerButton = findViewById(R.id.button);
+        clickToLogin = findViewById(R.id.clickToLogin);
+
+        clickToLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity3.this, MainActivity2.class));
+            }
+        });
+
+        registerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String userNametxt = userName.getText().toString().trim();
+                String emailtxt = email.getText().toString().trim();
+                String passwordtxt = password.getText().toString().trim();
+
+                if (TextUtils.isEmpty(userNametxt)) {
+                    Toast.makeText(MainActivity3.this, "Enter Name", Toast.LENGTH_SHORT).show();
+                } else if (TextUtils.isEmpty(emailtxt)) {
+                    Toast.makeText(MainActivity3.this, "Enter email", Toast.LENGTH_SHORT).show();
+                } else if (TextUtils.isEmpty(passwordtxt)) {
+                    Toast.makeText(MainActivity3.this, "Enter password", Toast.LENGTH_SHORT).show();
+                } else if (!emailChecker(emailtxt)) {
+                    Toast.makeText(MainActivity3.this, "Enter a valid email", Toast.LENGTH_SHORT).show();
+                } else {
+                    createUser(emailtxt, passwordtxt, userNametxt);
+                }
+            }
+        });
+    }
+
+    private boolean emailChecker(String email) {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private void createUser(String email, String password, String username) {
+        mAuth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()) {
+                        User user = new User(username, email);
+                        mRef.child("users").push().setValue(user)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            Toast.makeText(MainActivity3.this, "User Created Successfully", Toast.LENGTH_SHORT).show();
+                                            startActivity(new Intent(MainActivity3.this, Home_main.class));
+                                            finish();
+                                        } else {
+                                            Log.e(TAG, "Error adding user to database: " + task.getException().getMessage());
+                                            Toast.makeText(MainActivity3.this, "Failed to add user to database", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+                    } else {
+                        Log.e(TAG, "User registration failed: " + task.getException().getMessage());
+                        Toast.makeText(MainActivity3.this, "Failed to create user", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e(TAG, "User registration failure: " + e.getMessage());
+                    Toast.makeText(MainActivity3.this, "Failed to create user", Toast.LENGTH_SHORT).show();
+                }
+            });
+    }
+}
+
+**********************************************		FIREBASE SIGNIN				********************************************************************
+
+
+
+**********************************************  Create user class for Firebase signup/in  ********************************************************************
+
+package com.example.rentify.model;
+
+public class User {
+    private String name;
+    private String email;
+
+    private String image;
+
+    public User() {
+        // Default constructor required for calls to DataSnapshot.getValue(User.class)
+    }
+
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+}
+
+
+
+=======================================================================Google Map====================================================================
+
+
+public class Googlemap extends AppCompatActivity implements OnMapReadyCallback {
+
+    private final int FINE_PERMISSION_CODE = 1;
+    private GoogleMap myMap;
+    Location currentLocation;
+    FusedLocationProviderClient fusedLocationProviderClient;
+    
+     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_googlemap);
+        
+         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+    
+    
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        myMap = googleMap;
+        LatLng myloc = new LatLng(13.012921951161916, 80.23593713381455);//IST DEPT
+        myMap.addMarker(new MarkerOptions().position(myloc).title("My Location"));
+        myMap.moveCamera(CameraUpdateFactory.newLatLng(myloc));
+
+
+    }
+}
+
+
+
+
+
+
+In website use  dependecnies in build gradle and meta data in manifeest between activity ->https://developers.google.com/maps/documentation/android-sdk/start#kotlin
+
+implementation 'com.google.android.gms:play-services-maps:19.0.0'
+
+
+
+IN XMl 
+
+
+<fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+
+=============================================================================Google Map==============================================================================================================
+
+
+
+
+
+
